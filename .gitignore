@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+.venv/
+env/
+venv/
+
+# IDE
+.idea/
+
+# Alembic cache
+alembic/versions/__pycache__/
+
+# Logs
+*.log
