@@ -44,7 +44,8 @@ HEADER = [
 def _ensure_header(sheet):
     existing = sheet.row_values(1)
     if existing != HEADER:
-        sheet.delete_rows(1)
+        if existing:
+            sheet.delete_rows(1)
         sheet.insert_row(HEADER, 1)
 
 
@@ -60,7 +61,7 @@ def _items_to_string(items: List[OrderItem]) -> str:
 
 
 def write_order_to_google_sheet(order_id: int) -> None:
-    """Добавляем строку с заказом в конец таблицы."""
+    """Добавляем строку с заказом в конец таблицы (по order_id через БД)."""
     db = SessionLocal()
     try:
         order: Order | None = db.query(Order).filter(Order.id == order_id).first()
@@ -93,7 +94,7 @@ def write_order_to_google_sheet(order_id: int) -> None:
 def update_order_in_google_sheet(order_id: int) -> None:
     """
     Находит строку по Order ID и обновляет её (статус, суммы, даты).
-    Если строка не найдена — ничего не делаем.
+    Если строка не найдена — добавляем новую строку.
     """
     db = SessionLocal()
     try:
@@ -136,3 +137,31 @@ def update_order_in_google_sheet(order_id: int) -> None:
         sheet.update(f"A{row_index}:J{row_index}", [new_row])
     finally:
         db.close()
+
+
+# 🆕 ВОТ ЭТОЙ ФУНКЦИИ НЕ ХВАТАЛО
+def append_order_to_sheet(order: Order) -> None:
+    """
+    Добавляет строку с заказом в конец таблицы,
+    когда у нас уже есть объект Order (без отдельного запроса в БД).
+    Используется в manager_listener / order_service.
+    """
+    items: List[OrderItem] = order.items
+
+    sheet = _get_sheet()
+    _ensure_header(sheet)
+
+    row = [
+        str(order.id),
+        _format_datetime(order.created_at),
+        order.status,
+        _items_to_string(items),
+        float(order.total_amount or 0),
+        order.delivery_address or "",
+        order.contact_email or "",
+        order.contact_phone or "",
+        _format_datetime(order.expected_delivery_date),
+        _format_datetime(order.actual_delivery_date),
+    ]
+
+    sheet.append_row(row)
