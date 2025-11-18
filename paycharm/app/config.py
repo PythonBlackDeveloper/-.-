@@ -1,33 +1,41 @@
-# app/config.py
-from pydantic_settings import BaseSettings
-from pydantic import AnyUrl
+# paycharm/app/config.py
+
+from __future__ import annotations
+
+from typing import Optional
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    # DB
-    DATABASE_URL: AnyUrl
+    # говорим, что надо читать .env и игнорировать любые лишние переменные
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",  # <- ВАЖНО: не ругаться на tg_api_id и прочее
+    )
 
-    # LLM
-    OPENAI_API_KEY: str
+    # === Обязательная штука ===
+    DATABASE_URL: str
 
-    # Telegram
-    TELEGRAM_USER_BOT_TOKEN: str
-    TELEGRAM_ADMIN_BOT_TOKEN: str
+    # === Остальное — опционально ===
+    OPENAI_API_KEY: Optional[str] = None
 
-    # Google Sheets
-    GOOGLE_SHEETS_CREDENTIALS_PATH: str
-    GOOGLE_SHEETS_SPREADSHEET_ID: str
+    TELEGRAM_USER_BOT_TOKEN: Optional[str] = None
+    TELEGRAM_ADMIN_BOT_TOKEN: Optional[str] = None
 
-    # Email
-    SMTP_HOST: str
-    SMTP_PORT: int
-    SMTP_USER: str
-    SMTP_PASSWORD: str
-    ORDER_NOTIFICATION_EMAIL: str
+    GOOGLE_SHEETS_CREDENTIALS_PATH: Optional[str] = None
+    GOOGLE_SHEETS_SPREADSHEET_ID: Optional[str] = None
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    SMTP_HOST: Optional[str] = None
+    SMTP_PORT: Optional[int] = None
+    SMTP_USER: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    ORDER_NOTIFICATION_EMAIL: Optional[str] = None
+
+    TG_API_ID: Optional[int] = None
+    TG_API_HASH: Optional[str] = None
+    ADMIN_TELEGRAM_ID: Optional[int] = None
 
 
 settings = Settings()

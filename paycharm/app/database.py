@@ -1,14 +1,23 @@
-# app/database.py
+# paycharm/app/database.py
+
+from __future__ import annotations
+
+from contextlib import contextmanager
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker
+
 from paycharm.app.config import settings
 
+
+# Создаём engine для подключения к PostgreSQL
 engine = create_engine(
-    settings.DATABASE_URL.unicode_string(),
+    settings.DATABASE_URL,  # теперь это обычная строка из .env
     future=True,
-    echo=False,  # можно True для отладки SQL
+    echo=False,             # можно True, если хочешь видеть SQL-запросы
 )
 
+# Фабрика сессий
 SessionLocal = sessionmaker(
     bind=engine,
     autoflush=False,
@@ -16,18 +25,22 @@ SessionLocal = sessionmaker(
     future=True,
 )
 
-Base = declarative_base()
 
-
+@contextmanager
 def get_db():
-    from contextlib import contextmanager
+    """
+    Контекстный менеджер для работы с сессией БД.
 
-    @contextmanager
-    def _get_db():
-        db = SessionLocal()
-        try:
-            yield db
-        finally:
-            db.close()
+    Пример:
 
-    return _get_db()
+        from paycharm.app.database import get_db
+
+        with get_db() as db:
+            db.query(...)
+
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

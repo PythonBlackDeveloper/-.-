@@ -1,12 +1,25 @@
-# app/models.py
-from datetime import datetime
-from sqlalchemy import (
-    Column, Integer, String, Numeric, DateTime, ForeignKey, Text
-)
-from sqlalchemy.orm import relationship
+# paycharm/app/models.py
 
-from paycharm.app.database import Base
+from __future__ import annotations
+
+from datetime import datetime
+
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Numeric,
+    DateTime,
+    ForeignKey,
+    Text,
+)
+from sqlalchemy.orm import relationship, declarative_base
+
 from paycharm.app.utils.enums import OrderStatus
+
+
+# Базовый класс для всех моделей
+Base = declarative_base()
 
 
 class Order(Base):
@@ -14,7 +27,12 @@ class Order(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=True,
+    )
 
     status = Column(String, default=OrderStatus.PENDING.value, nullable=False)
 
@@ -29,15 +47,27 @@ class Order(Base):
 
     source_message = Column(Text, nullable=False)
 
-    items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
-    status_history = relationship("StatusHistory", back_populates="order", cascade="all, delete-orphan")
+    items = relationship(
+        "OrderItem",
+        back_populates="order",
+        cascade="all, delete-orphan",
+    )
+    status_history = relationship(
+        "StatusHistory",
+        back_populates="order",
+        cascade="all, delete-orphan",
+    )
 
 
 class OrderItem(Base):
     __tablename__ = "order_items"
 
     id = Column(Integer, primary_key=True, index=True)
-    order_id = Column(Integer, ForeignKey("orders.id", ondelete="CASCADE"), nullable=False)
+    order_id = Column(
+        Integer,
+        ForeignKey("orders.id", ondelete="CASCADE"),
+        nullable=False,
+    )
 
     name = Column(String, nullable=False)
     quantity = Column(Integer, nullable=False)
@@ -51,7 +81,11 @@ class StatusHistory(Base):
     __tablename__ = "status_history"
 
     id = Column(Integer, primary_key=True, index=True)
-    order_id = Column(Integer, ForeignKey("orders.id", ondelete="CASCADE"), nullable=False)
+    order_id = Column(
+        Integer,
+        ForeignKey("orders.id", ondelete="CASCADE"),
+        nullable=False,
+    )
     old_status = Column(String, nullable=True)
     new_status = Column(String, nullable=False)
     changed_at = Column(DateTime, default=datetime.utcnow, nullable=False)
