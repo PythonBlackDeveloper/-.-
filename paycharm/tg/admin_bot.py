@@ -11,6 +11,8 @@ from paycharm.app.services.order_service import (
     list_recent_orders,
     get_order_by_id,
     set_order_status,
+)
+from paycharm.app.services.metrics_service import (
     get_sales_metrics,
     get_delivery_metrics,
 )
